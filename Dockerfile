@@ -1,4 +1,4 @@
-FROM mirror.gcr.io/library/node:18-alpine
+FROM mirror.gcr.io/library/node:20.9.0-alpine AS builder
 
 WORKDIR /app
 
@@ -8,6 +8,14 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 5173
+RUN npm run build
 
-CMD ["npm", "run", "dev"]
+FROM mirror.gcr.io/library/nginx:alpine
+
+RUN apk add --no-cache ca-certificates
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
